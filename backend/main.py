@@ -8,8 +8,14 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import logging
 import MeCab
+from pydantic import BaseModel
 
-
+class submit_data(BaseModel):
+    freetext: str
+    engineerType: str
+    programmingLanguage: str
+    technologyPreference: str
+    interestFields: str
 
 app = FastAPI()
 
@@ -139,3 +145,48 @@ def corresponding_answer(db: Session = Depends(get_db), topic_txt: str = ""):
     except Exception as e:
         return {"message": "Internal server error"}
     
+
+@app.post("/submit")
+def recommend(data: submit_data,db: Session = Depends(get_db),):
+    try:
+        if not data.freetext.strip():
+            return {"message": "Please provide a valid freetext."}
+        
+        tech_pref = data.technologyPreference
+        
+        # 入力テキストを形態素解析
+        freetext_processed = tokenize(data.freetext)
+        
+        topics = db.execute(select(Topic)).scalars().all()
+        
+        # TF-IDF ベクトル化
+        vectorizer = TfidfVectorizer()
+        
+        # 形態素解析を適用して、分かち書きされたトピックの文字列リスト
+        topic_descriptions = [tokenize(topic.description) for topic in topics]
+        tfidf_matrix = vectorizer.fit_transform(topic_descriptions)
+        
+        # 入力テキストを同じベクトル空間にマッピング（変換）
+        freetext_vector = vectorizer.transform([freetext_processed])
+        
+        # コサイン類似度を計算
+        similarities = cosine_similarity(freetext_vector, tfidf_matrix).flatten()
+        
+        # 例外処理: すべての類似度が 0 の場合
+        if similarities.max() == 0:
+            return {"message": "No relevant topic found."}
+        
+        # 最も類似度が高いトピックを取得
+        top_index = similarities.argmax()
+        recommendation = topics[top_index]
+        
+        if recommendation and data.programmingLanguage== "" and tech_pref== "modern":
+            language = db.execute(select(Language).filter(Language.is_modern == True)).scalar()
+            return {"answer": f"{recommendation.name} を {language.name} でつくる"}
+        elif recommendation and data.programmingLanguage== "" and tech_pref== "legacy":
+            language = db.execute(select(Language).filter(Language.is_modern == False)).scalar()
+            return {"answer": f"{recommendation.name} を {language.name} でつくる"}
+        else:
+            return {"answer": f"{recommendation.name} を {data.programmingLanguage} でつくる"}
+    except:
+        return {"message": "Internal server error"}
