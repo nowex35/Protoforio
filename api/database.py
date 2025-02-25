@@ -2,15 +2,14 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
+from models import Base
 
-# .env ファイルの読み込み
 load_dotenv()
-
-# Cloud SQL の接続 URL
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 # 同期エンジンの作成
 engine = create_engine(DATABASE_URL, echo=True)
+Base.metadata.create_all(engine)
 
 # セッションの作成
 SessionLocal = sessionmaker(

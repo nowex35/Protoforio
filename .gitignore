@@ -1,1 +1,38 @@
+# Python関連
+__pycache__/
+.pytest_cache/
+myvenv/
+.python-version
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+*.eggs/
+*.log
+
+# 環境設定ファイル
 .env
+.env.*
+
+# Docker関連
+Docker-compose.override.yml
+
+# IDE/エディタ関連
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS関連
+.DS_Store
+Thumbs.db
+
+# その他
+*.lock
+*.log
+*.bak
+*.swp
+*.swo
+
+alembic.ini

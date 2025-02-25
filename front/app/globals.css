@@ -6,6 +6,36 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* ツールチップのスタイル */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 240px;
+  background-color: rgba(0, 0, 0, 0.8); /* 背景色を調整 */
+  color: #f9fafb; /* テキストの色を調整 */
+  text-align: center;
+  border-radius: 0.375rem; /* 角の丸みを調整 (Tailwind の rounded-md) */
+  padding: 0.75rem; /* パディングを調整 (Tailwind の p-3) */
+  position: absolute;
+  z-index: 1;
+  bottom: 125%; /* ツールチップの位置 */
+  left: 50%;
+  margin-left: -120px; /* ツールチップの中央揃え */
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 0.875rem; /* フォントサイズを調整 (Tailwind の text-sm) */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 影を追加 */
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
