@@ -12,10 +12,6 @@ import type React from "react"
 import { useAuth } from "@/context/AuthContext"
 const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL
 const API_URL = process.env.NEXT_PUBLIC_API_URL
-const JWT_SECRET = process.env.NEXT_PUBLIC_JWT_SECRET
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET is not set")
-}
 
 interface RecommendationResponse {
   title: string
