@@ -23,7 +23,7 @@ Protoforioは、簡単なアンケートフォームへの解答から、AI（Lo
 
 - **分散システム構成**  
   - **フロントエンド**: Next.js  
-  - **AIバックエンド**: FastAPI、Deepseek、PostgreSQL  
+  - **AIバックエンド**: FastAPI、Deepseek(ローカル)、PostgreSQL  
   - **認証バックエンド**: Hono.jsを使用し、独自のトークン（メール/OAuthベース）によるユーザ情報管理  
     - 詳細は [認証APIリポジトリ](https://github.com/nowex35/auth) を参照してください。
 
