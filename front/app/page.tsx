@@ -377,7 +377,7 @@ export default function ProtoforioPage() {
             </RadioGroup>
           </motion.div>
 
-          {/* Q3: 興味のある分野（複数選択可） */}
+          {/* Q4: 興味のある分野（複数選択可） */}
           <div>
             <Label className="text-lg mb-2 block">Q4: 自分に興味のある分野は？（複数選択可）</Label>
             <div className="grid grid-cols-2 gap-2">
