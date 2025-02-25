@@ -53,7 +53,9 @@ Protoforioは、簡単なアンケートフォームへの解答から、AI（Lo
    - **学習方針の選択**  
      （例：初心者向け、ステップアップ）
    - **興味のある分野の選択**  
-     （例：健康、スポーツ、ゲーム、音楽）
+     （例：健康、スポーツ、ゲーム、音楽）  
+![image](https://github.com/user-attachments/assets/797557dd-fd20-44d5-b202-b78c92b91c63)
+
 
 3. **フォーム送信と結果取得**  
    - フォーム送信時に、バックエンドAPIへリクエストを実施  
@@ -62,10 +64,16 @@ Protoforioは、簡単なアンケートフォームへの解答から、AI（Lo
 
 4. **結果出力**  
    - 正しいフォーマットで結果を表示  
-   - 自動スクロールでユーザにフィードバックを即座に提示
+   - 自動スクロールでユーザにフィードバックを即座に提示  
+![image](https://github.com/user-attachments/assets/e82706cd-1ec2-44be-a13a-23f2c91342a6)
+
 
 5. **履歴確認**  
    - ログイン済みの場合、履歴ページから過去の解答とフィードバックの詳細を確認可能
+- 一覧ページ
+![image](https://github.com/user-attachments/assets/28c98e79-64ae-4b8c-93a0-7c18d1004afe)
+- 詳細ページ
+![image](https://github.com/user-attachments/assets/ea3cc51a-2137-47c3-8261-b5c256741129)
 
 ---
 
