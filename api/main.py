@@ -67,7 +67,7 @@ def recommend_deepseek(data: submit_data,db: Session = Depends(get_db)):
         "必ず、```jsonと```で囲んでjsonだけを出力してください。"
     )
     
-    response = requests.post("http://192.168.86.123:8000/response", json={"text": single_string})
+    response = requests.post(f"{getenv("DEEPSEEK_URL")}:8000/response", json={"text": single_string})
     if response.status_code != 200:
         return {
             "error": f"Failed to fetch from DeepSeek API. Status Code: {response.status_code}",
@@ -85,7 +85,6 @@ def recommend_deepseek(data: submit_data,db: Session = Depends(get_db)):
         # ないの場合、直接JSONとして解析
         json_text = raw_text.split("</think>")[1].strip()
         json_text = json_text.strip()
-    print(f"json_text: {json_text}")
     if json_text:
         parsed_data = json.loads(json_text)
     else:
@@ -94,8 +93,6 @@ def recommend_deepseek(data: submit_data,db: Session = Depends(get_db)):
         decoded_token = jwt.decode(data.accessToken,getenv("JWT_SECRET_KEY") ,options={"verify_signature": False})
         user_id = decoded_token.get("userId")
         uuid_user_id = UUID(user_id)
-        print(f"UUID User: {uuid_user_id}")
-        print(f"UUID User type:{type(uuid_user_id)}")
         if uuid_user_id:
             db_rec = RecommendationModel(user_id=uuid_user_id, recommendation=parsed_data)
             db.add(db_rec)
@@ -146,17 +143,12 @@ def get_recommendation_detail(request: Request, rec_id: UUID4, db: Session = Dep
         rec = db.query(RecommendationModel).filter(RecommendationModel.id == rec_id).first()
         if rec is None:
             raise HTTPException(status_code=404, detail="Recommendation not found")
-        print(f"Rec: {rec.user_id}")
-        print(f"Rec type:{type(rec.user_id)}")
-        print(f"User: {user_id}")
-        print(f"User type:{type(user_id)}")
         if rec.user_id != UUID(user_id):
             raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this recommendation.")
         return rec.recommendation
     except HTTPException as e:
         raise e
     except Exception as e:
-        print(f"Error occurred: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 """
