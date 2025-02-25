@@ -60,7 +60,7 @@ export default function RecommendationDetailPage() {
   useEffect(() => {
     const fetchToken = async () => {
       try {
-        const response = await fetch(`${AUTH_URL}/auth/token`, {
+        const response = await fetch(`${AUTH_URL}/auth/refresh`, {
           method: 'GET',
           credentials: 'include',
         })

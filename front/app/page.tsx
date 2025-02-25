@@ -92,7 +92,7 @@ export default function ProtoforioPage() {
   useEffect(() => {
       const fetchToken = async () => {
       
-      const response = await fetch(`${AUTH_URL}/auth/token`, {
+      const response = await fetch(`${AUTH_URL}/auth/refresh`, {
         method: "GET",
         credentials: "include",
       })
@@ -125,7 +125,7 @@ export default function ProtoforioPage() {
     setErrorMessage("")
     setRecommendation(null)
 
-    const response = await fetch(`${AUTH_URL}/auth/token`, {
+    const response = await fetch(`${AUTH_URL}/auth/refresh`, {
       method: "GET",
       credentials: "include",
     })
