@@ -3,6 +3,7 @@
 **初心者エンジニアのためのポートフォリオお題生成アプリ**
 
 Protoforioは、簡単なアンケートフォームへの解答から、AI（Local Deepseek or Gemini API）によるフィードバックを受け取ることで、初心者エンジニアが自身のポートフォリオを作成するためのお題を生成するアプリケーションです。
+![image](https://github.com/user-attachments/assets/195ab870-865f-4098-ac23-4b291cdd7e4b)
 
 ---
 
@@ -40,7 +41,9 @@ Protoforioは、簡単なアンケートフォームへの解答から、AI（Lo
 ## ユーザーフロー
 
 1. **アカウント登録**  
-   - Google OAuth 2.0 を利用したアカウント登録
+   - Google OAuth 2.0 を利用したアカウント登録  
+![image](https://github.com/user-attachments/assets/cf00d23a-0213-4d96-8da3-b03d46567f93)
+
 
 2. **アンケートフォームの解答**  
    - **興味のあるエンジニアの種類**  
