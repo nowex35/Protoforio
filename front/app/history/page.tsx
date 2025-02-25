@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
-import { jwtDecode } from 'jwt-decode'
-
 const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -27,14 +25,10 @@ interface HistoryItem {
   recommendation: RecommendationData
 }
 
-interface JwtPayload {
-  userId: string
-}
-
 export default function HistoryPage() {
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const { accessToken, setAccessToken, user, setUser } = useAuth()
+  const { accessToken, setAccessToken, user, } = useAuth()
   const router = useRouter()
 
   // トークン取得
@@ -59,17 +53,6 @@ export default function HistoryPage() {
     fetchToken()
   }, [setAccessToken])
 
-  // ユーザー情報のセット
-  useEffect(() => {
-    if (!accessToken) return
-    try {
-      const decoded = jwtDecode<JwtPayload>(accessToken)
-      setUser({ userId: decoded.userId })
-    } catch (error) {
-      console.error('JWT decode error:', error)
-    }
-  }, [accessToken, setUser])
-
   // 履歴の取得
   useEffect(() => {
     if (!user) return
@@ -78,7 +61,6 @@ export default function HistoryPage() {
         const response = await fetch(`${API_URL}/history`,{
           method: 'GET',
           headers: {
-            'Content-Type': 'application/json',
             'AUTHORIZATION': `Bearer ${accessToken}`,
           },
         })

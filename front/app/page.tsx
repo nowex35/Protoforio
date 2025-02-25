@@ -10,9 +10,12 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import type React from "react"
 import { useAuth } from "@/context/AuthContext"
-import { jwtDecode } from "jwt-decode"
 const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL
 const API_URL = process.env.NEXT_PUBLIC_API_URL
+const JWT_SECRET = process.env.NEXT_PUBLIC_JWT_SECRET
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET is not set")
+}
 
 interface RecommendationResponse {
   title: string
@@ -20,10 +23,6 @@ interface RecommendationResponse {
   roadmap: string[]
   technologies: string[]
   outcomes: string[]
-}
-
-interface JwtPayload {
-  userId: string;
 }
 
 // カスタムラジオグループアイテム（ラベル付き）
@@ -101,40 +100,32 @@ export default function ProtoforioPage() {
         setAccessToken(null)
       }
       const data = await response.json()
-      const accessToken = data.accessToken
-      setAccessToken(accessToken)
+      const Token = data.accessToken
+      setAccessToken(Token)
+      const me_response = await fetch(`${AUTH_URL}/auth/me`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${Token}`,
+        },
+      })
+      if (!me_response.ok) {
+        setUser(null)
+      }
+      const me_data = await me_response.json()
+      const user_id = me_data.userId
+      setUser({ userId: user_id })
       router.replace("/")
     }
   
     fetchToken()
-    }, [router, setAccessToken])
+    }, [router, setAccessToken, setUser])
 
-  useEffect(() => {
-    if (!accessToken) return
-    try {
-      const decoded = jwtDecode<JwtPayload>(accessToken)
-      setUser({ userId: decoded.userId })
-    } catch (error) {
-      console.error("JWT decode error:", error)
-    }
-  }, [accessToken, setUser])
-  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setErrorMessage("")
     setRecommendation(null)
 
-    const response = await fetch(`${AUTH_URL}/auth/refresh`, {
-      method: "GET",
-      credentials: "include",
-    })
-    if (!response.ok) {
-      setAccessToken(null)
-    }
-    const data = await response.json()
-    const token = data.accessToken
-    setAccessToken(token)
     // バリデーションチェック
     if (!engineerType) {
       setErrorMessage("エンジニアのタイプを選択してください。")

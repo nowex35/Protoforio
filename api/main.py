@@ -8,7 +8,6 @@ import json
 from sqlalchemy.orm import Session
 from database import get_db
 from models import RecommendationModel
-import jwt
 from os import getenv
 from uuid import UUID
 """
@@ -26,6 +25,7 @@ import numpy as np
 load_dotenv()
 origins = [
     "http://localhost:3000",  # フロントエンドのオリジン (例)
+    "https://127.0.0.1:3000"  # フロントエンドのオリジン (例)
 ]
 
 # model_name = 'cl-tohoku/bert-base-japanese-v2'
@@ -47,6 +47,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 @app.get("/")
@@ -55,6 +56,7 @@ async def root():
 
 @app.post("/submit_deepseek")
 def recommend_deepseek(data: submit_data,db: Session = Depends(get_db)):
+    print(f"data:{data}")
     single_string = (
         "以下の内容に関して、日本語でJSON形式で答えてください。"
         "出力フォーマットは以下のようにしてください:"
@@ -90,8 +92,11 @@ def recommend_deepseek(data: submit_data,db: Session = Depends(get_db)):
     else:
         raise ValueError("Failed to parse JSON response from DeepSeek API.")
     if data.accessToken:
-        decoded_token = jwt.decode(data.accessToken,getenv("JWT_SECRET_KEY") ,options={"verify_signature": False})
-        user_id = decoded_token.get("userId")
+        me_response = requests.get(f"{getenv('AUTH_URL')}/auth/me", headers={"Authorization": f"Bearer {data.accessToken}"})
+        if me_response.status_code != 200:
+            raise HTTPException(status_code=401, detail="Invalid access token")
+        me_response_data = me_response.json()
+        user_id = me_response_data.get('user',{}).get("userId")
         uuid_user_id = UUID(user_id)
         if uuid_user_id:
             db_rec = RecommendationModel(user_id=uuid_user_id, recommendation=parsed_data)
@@ -112,9 +117,13 @@ def get_user_history(request: Request, db: Session = Depends(get_db)):
         if not auth_header:
             raise HTTPException(status_code=401, detail="Authorization header is missing.")
         accessToken = auth_header.split(" ")[1]
-        jwt_secret = getenv("JWT_SECRET_KEY") or "test_secret"
-        decoded_token = jwt.decode(accessToken, jwt_secret, options={"verify_signature": False})
-        user_id = decoded_token.get("userId")
+        response = requests.get(f"{getenv('AUTH_URL')}/auth/me", headers={"Authorization": f"Bearer {accessToken}"})
+        if response.status_code != 200:
+            raise HTTPException(status_code=401, detail="Invalid access token")
+        me_response_data = response.json()
+        user_id = me_response_data.get('user',{}).get("userId")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid access token")
         history = (
             db.query(RecommendationModel).
             filter(RecommendationModel.user_id == user_id).
@@ -124,10 +133,6 @@ def get_user_history(request: Request, db: Session = Depends(get_db)):
         return {"history":history}
     except HTTPException as e:
         raise e
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired.")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
@@ -138,8 +143,13 @@ def get_recommendation_detail(request: Request, rec_id: UUID4, db: Session = Dep
         if not auth_header:
             raise HTTPException(status_code=401, detail="Authorization header is missing.")
         accessToken = auth_header.split(" ")[1]
-        decoded_token = jwt.decode(accessToken, getenv("JWT_SECRET_KEY"), options={"verify_signature": False})
-        user_id = decoded_token.get("userId")
+        me_response = requests.get(f"{getenv('AUTH_URL')}/auth/me", headers={"Authorization": f"Bearer {accessToken}"})
+        if me_response.status_code != 200:
+            raise HTTPException(status_code=401, detail="Invalid access token")
+        me_response_data = me_response.json()
+        user_id = me_response_data.get('user',{}).get("userId")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid access token")
         rec = db.query(RecommendationModel).filter(RecommendationModel.id == rec_id).first()
         if rec is None:
             raise HTTPException(status_code=404, detail="Recommendation not found")
@@ -148,6 +158,8 @@ def get_recommendation_detail(request: Request, rec_id: UUID4, db: Session = Dep
         return rec.recommendation
     except HTTPException as e:
         raise e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid UUID: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 

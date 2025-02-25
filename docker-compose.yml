@@ -36,14 +36,14 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-  pgadmin4:
-    image: dpage/pgadmin4
-    env_file:
-      - .env
-    ports:
-      - "8080:80"
-    depends_on:
-      - db
+  # pgadmin4:
+  #   image: dpage/pgadmin4
+  #   env_file:
+  #     - .env
+  #   ports:
+  #     - "8080:80"
+  #   depends_on:
+  #     - db
   # テスト用
   test:
     build: ./api

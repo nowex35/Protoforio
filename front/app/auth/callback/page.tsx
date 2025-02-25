@@ -22,7 +22,6 @@ export default function AuthCallback() {
         method: "GET",
         credentials: "include",
       })
-      console.log()
 
       if (!response.ok) {
         throw new Error("Failed to fetch token")

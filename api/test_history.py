@@ -1,7 +1,6 @@
 from fastapi.testclient import TestClient
 from main import app, get_db
 from uuid import uuid4
-import jwt
 
 client = TestClient(app)
 
@@ -37,37 +36,42 @@ class FakeSession:
         return FakeQuery(self.fake_user_id)
 
 def test_get_user_history(monkeypatch):
-    # テスト用シークレットの設定
-    monkeypatch.setenv("JWT_SECRET_KEY", "test_secret")
-
-    # モックデータを作成
+    monkeypatch.setenv("AUTH_URL", "http://mock-auth-url")
     fake_user_id = str(uuid4())
-    secret = "test_secret"
-    token = jwt.encode({"userId": fake_user_id}, secret)
-    
-    # FastAPI の依存関係オーバーライドを利用して FakeSession を返すようにする
     app.dependency_overrides[get_db] = lambda: FakeSession(fake_user_id)
 
+    def mock_get(url, headers):
+        class MockResponse:
+            def __init__(self, json_data, status_code):
+                self.json_data = json_data
+                self.status_code = status_code
+
+            def json(self):
+                return self.json_data
+
+            def get(self, key, default=None):
+                return self.json_data.get(key, default)
+
+        if url == "http://mock-auth-url/auth/me":
+            return MockResponse({"user": {"userId": fake_user_id}}, 200)
+
+    monkeypatch.setattr("requests.get", mock_get)
+
     headers = {
-        "Authorization": f"Bearer {token}"
+        "Authorization": "Bearer valid_token"
     }
     response = client.get("/history", headers=headers)
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     data = response.json()
     assert "history" in data
     assert isinstance(data["history"], list)
-    # FakeSession で作成したデータが返るので、リストの長さは 1 となるはず
     assert len(data["history"]) > 0
     assert "title" in data["history"][0]["recommendation"]
     assert data["history"][0]["recommendation"]["title"] == "Test Title"
 
 def test_get_user_history_no_token(monkeypatch):
-    monkeypatch.setenv("JWT_SECRET_KEY", "test_secret")
-    # DB の呼び出しを防ぐために、FakeSession を利用（空のリストを返す）
-    class EmptyFakeSession:
-        def query(self, model):
-            return FakeQuery(fake_user_id="")  # 空のユーザーIDでも OK
-    app.dependency_overrides[get_db] = lambda: EmptyFakeSession()
+    monkeypatch.setenv("AUTH_URL", "http://mock-auth-url")
+    app.dependency_overrides[get_db] = lambda: FakeSession("")
 
     response = client.get("/history")
     assert response.status_code == 401
@@ -75,12 +79,24 @@ def test_get_user_history_no_token(monkeypatch):
     assert data["detail"] == "Authorization header is missing."
 
 def test_get_user_history_invalid_token(monkeypatch):
-    monkeypatch.setenv("JWT_SECRET_KEY", "test_secret")
-    # DB の呼び出しを防ぐために、FakeSession を利用（今回は実際は使われない）
-    class EmptyFakeSession:
-        def query(self, model):
-            return FakeQuery(fake_user_id="") 
-    app.dependency_overrides[get_db] = lambda: EmptyFakeSession()
+    monkeypatch.setenv("AUTH_URL", "http://mock-auth-url")
+    app.dependency_overrides[get_db] = lambda: FakeSession("")
+
+    def mock_get(url, headers):
+        class MockResponse:
+            def __init__(self, json_data, status_code):
+                self.json_data = json_data
+                self.status_code = status_code
+
+            def json(self):
+                return self.json_data
+
+            def get(self, key, default=None):
+                return self.json_data.get(key, default)
+
+        return MockResponse({"detail": "Invalid access token"}, 401)
+
+    monkeypatch.setattr("requests.get", mock_get)
 
     headers = {
         "Authorization": "Bearer invalid_token"
@@ -88,4 +104,8 @@ def test_get_user_history_invalid_token(monkeypatch):
     response = client.get("/history", headers=headers)
     assert response.status_code == 401
     data = response.json()
-    assert data["detail"] == "Invalid token."
+    assert data["detail"] == "Invalid access token"
+
+# テスト終了後、依存関係のオーバーライドをクリア
+def teardown_module(module):
+    app.dependency_overrides = {}
