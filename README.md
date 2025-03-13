@@ -144,5 +144,9 @@ Protoforioは、簡単なアンケートフォームへの解答から、AI（Lo
 - Amazon bedrockによる対応
 
 ---
+###### キーワードマッチング時に雑に使っていたDB
+![image](https://github.com/user-attachments/assets/24daac4b-8f1a-4674-b2a5-311f1a44b959)
+
+
 
 *上記内容は、プロジェクトの現状および今後の展望を反映したものです。実際の開発状況に応じて随時更新していく予定です。*
